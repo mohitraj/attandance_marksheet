@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Merger Tool</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    #loader {
+      display: none;
+      text-align: center;
+    }
+    #loader .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+    .fade-out {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .btn-sample {
+      font-size: 0.9rem;
+      padding: 4px 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+      <div class="card p-4">
+        <h3 class="text-center mb-3">📊 Attendance Merger Tool By Mohit</h3>
+
+        <!-- Sample File Download -->
+        <div class="text-center mb-3">
+          <a class="btn btn-outline-secondary btn-sample me-2" href="{{ url_for('static', filename='samples/sample_lecture.xlsx') }}" download>
+            📘 Sample Lecture File
+          </a>
+          <a class="btn btn-outline-secondary btn-sample" href="{{ url_for('static', filename='samples/sample_lab.xlsx') }}" download>
+            🧪 Sample Lab File
+          </a>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Download Link (One-Time) -->
+        {% if download_file %}
+          <div class="alert alert-success text-center">
+            ✅ File is ready.<br>
+            <a class="btn btn-success mt-2" href="{{ url_for('download', filename=download_file) }}">⬇️ Download Final File</a>
+          </div>
+        {% endif %}
+
+        <!-- Upload Form -->
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+          <div class="mb-3">
+            <label class="form-label">📘 Upload Lecture File (.xlsx)</label>
+            <input class="form-control" type="file" name="lecture" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">🧪 Upload Lab File (.xlsx)</label>
+            <input class="form-control" type="file" name="lab" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">🚀 Upload & Process</button>
+        </form>
+
+        <!-- Loader -->
+        <div id="loader" class="mt-4">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted">Processing... Please wait</p>
+        </div>
+
+        <p class="text-muted text-center mt-3" style="font-size: 0.9rem;">
+          Created by Mohit 
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS (for alert dismiss) -->
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+  const form = document.getElementById("upload-form");
+  const loader = document.getElementById("loader");
+
+  form.addEventListener("submit", function () {
+    form.classList.add("fade-out");
+    loader.style.display = "block";
+  });
+</script>
+
+</body>
+</html>
