@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Joiner by Mohit</title>
+    <title>Excel Joiner</title>
     <style>
         * {
             margin: 0;
@@ -16,6 +16,19 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         .container {
@@ -405,6 +418,8 @@
     </style>
 </head>
 <body>
+    <a href="/" class="back-link" style="max-width: 1400px; margin: 0 auto; display: block;">← Back to Home</a>
+    
     <div class="container">
         <h1>📊 Excel Joiner</h1>
         
@@ -542,7 +557,6 @@
         let mappings = [];
         let joinedColumns = [];
 
-        // File upload handlers
         document.getElementById('leftFile').addEventListener('change', (e) => uploadFile(e, 'left'));
         document.getElementById('rightFile').addEventListener('change', (e) => uploadFile(e, 'right'));
 
@@ -556,7 +570,7 @@
 
             showLoading(true);
             try {
-                const response = await fetch('/upload', {
+                const response = await fetch('/joiner/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -603,7 +617,7 @@
         document.getElementById('proceedToColumns').addEventListener('click', async () => {
             showLoading(true);
             try {
-                const response = await fetch('/get_columns');
+                const response = await fetch('/joiner/get_columns');
                 const data = await response.json();
                 
                 if (data.error) {
@@ -640,7 +654,6 @@
         }
 
         function selectColumn(side, column, element) {
-            // Deselect previous selection on this side
             document.querySelectorAll(`.column-item[data-side="${side}"]`).forEach(el => {
                 el.classList.remove('selected');
             });
@@ -653,13 +666,11 @@
                 selectedRight = column;
             }
             
-            // If both sides selected, add mapping
             if (selectedLeft && selectedRight) {
                 addMapping(selectedLeft, selectedRight);
                 selectedLeft = null;
                 selectedRight = null;
                 
-                // Deselect all
                 document.querySelectorAll('.column-item').forEach(el => {
                     el.classList.remove('selected');
                 });
@@ -667,7 +678,6 @@
         }
 
         function addMapping(left, right) {
-            // Check if mapping already exists
             const exists = mappings.some(m => m.left === left && m.right === right);
             if (exists) {
                 showAlert('This mapping already exists', 'warning');
@@ -713,7 +723,7 @@
             
             showLoading(true);
             try {
-                const response = await fetch('/join', {
+                const response = await fetch('/joiner/join', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -806,7 +816,7 @@
             
             showLoading(true);
             try {
-                const response = await fetch('/download', {
+                const response = await fetch('/joiner/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ selected_columns: selected })
@@ -840,7 +850,6 @@
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById(`step${stepNum}`).classList.add('active');
             
-            // Update progress bar
             for (let i = 1; i <= 4; i++) {
                 const progressStep = document.getElementById(`progress-${i}`);
                 progressStep.classList.remove('active', 'completed');
@@ -859,7 +868,7 @@
                 return;
             }
             
-            await fetch('/reset', { method: 'POST' });
+            await fetch('/joiner/reset', { method: 'POST' });
             location.reload();
         }
 

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Tools by Mohit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+
+        .tool-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .tool-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .tool-features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .tool-features li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .tool-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .tool-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .tool-card {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Excel Tools Suite</h1>
+            <p>Powerful tools to simplify your Excel workflow</p>
+        </div>
+
+        <div class="tools-grid">
+            <!-- Attendance Merger Tool -->
+            <a href="/attendance" class="tool-card">
+                <div class="tool-icon">📋</div>
+                <h2 class="tool-title">Attendance Merger</h2>
+                <p class="tool-description">
+                    Merge lecture and lab attendance files into a single, beautifully formatted Excel sheet with automatic styling.
+                </p>
+                <ul class="tool-features">
+                    <li>Merge lecture and lab attendance</li>
+                    <li>Automatic date sorting</li>
+                    <li>Color-coded formatting</li>
+                    <li>Highlight absences in red</li>
+                    <li>Sequential numbering</li>
+                </ul>
+                <button class="tool-button">Launch Attendance Merger →</button>
+            </a>
+
+            <!-- Excel Joiner Tool -->
+            <a href="/joiner" class="tool-card">
+                <div class="tool-icon">🔗</div>
+                <h2 class="tool-title">Excel Joiner</h2>
+                <p class="tool-description">
+                    Join two Excel or CSV files based on common columns with a powerful, user-friendly interface.
+                </p>
+                <ul class="tool-features">
+                    <li>Support for Excel & CSV files</li>
+                    <li>Multiple join types (Inner, Left, Right, Outer)</li>
+                    <li>Visual column mapping</li>
+                    <li>Live preview of results</li>
+                    <li>Select columns to export</li>
+                </ul>
+                <button class="tool-button">Launch Excel Joiner →</button>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>Created with ❤️ by Mohit</p>
+        </div>
+    </div>
+</body>
+</html>
