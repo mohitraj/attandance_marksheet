@@ -25,6 +25,11 @@ os.makedirs(app.config['SAMPLE_FOLDER'], exist_ok=True)
 def landing():
     return render_template('landing.html')
 
+def clean_dataframe(df):
+    """Replace NaN values with 'A' (Absent) or empty string"""
+    # Replace NaN with 'A' for attendance-related data
+    df = df.fillna('A')
+    return df
 # ==================== ATTENDANCE MERGER ====================
 def sort_key(date):
     if '.' in date:
@@ -93,8 +98,15 @@ def attendance_upload():
         styled_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
 
         key_columns = ["Roll. No", "Student Name"]
+        
+        # Read Excel files
         df1 = pd.read_excel(lecture_path)
         df2 = pd.read_excel(lab_path)
+        
+        # Clean NaN values - fill with 'A' for absent
+        df1 = df1.fillna('A')
+        df2 = df2.fillna('A')
+        
         df2_renamed = df2.rename(columns={col: col + '_lab' for col in df2.columns if col not in key_columns})
         merged_df = pd.merge(df1, df2_renamed, on=key_columns, how="inner")
         merged_df.columns = merged_df.columns.str.strip()
@@ -164,12 +176,15 @@ def joiner_upload():
         }
         session.modified = True
         
+        # Convert NaN to None for proper JSON serialization
+        preview_df = df.head(3).where(pd.notna(df.head(3)), None)
+        
         return jsonify({
             'success': True,
             'filename': filename,
             'columns': list(df.columns),
             'rows': len(df),
-            'preview': df.head(3).to_dict('records')
+            'preview': preview_df.to_dict('records')
         })
     
     except Exception as e:
@@ -236,13 +251,28 @@ def joiner_join():
         else:
             df_right = pd.read_excel(right_file)
         
-        df_joined = pd.merge(
-            df_left, 
-            df_right, 
-            left_on=left_columns, 
-            right_on=right_columns, 
-            how=join_type
-        )
+        # Handle the case where join columns have different names
+        if left_columns == right_columns:
+            df_joined = pd.merge(
+                df_left, 
+                df_right, 
+                on=left_columns,
+                how=join_type,
+                suffixes=('_left', '_right')
+            )
+        else:
+            df_joined = pd.merge(
+                df_left, 
+                df_right, 
+                left_on=left_columns, 
+                right_on=right_columns, 
+                how=join_type,
+                suffixes=('_left', '_right')
+            )
+            
+            cols_to_drop = [col for col in right_columns if col in df_joined.columns and col not in left_columns]
+            if cols_to_drop:
+                df_joined = df_joined.drop(columns=cols_to_drop)
         
         if df_joined.empty:
             return jsonify({'warning': 'Join returned no rows', 'columns': [], 'rows': 0})
@@ -257,11 +287,14 @@ def joiner_join():
         }
         session.modified = True
         
+        # Convert NaN to None for proper JSON serialization
+        preview_df = df_joined.head(5).where(pd.notna(df_joined.head(5)), None)
+        
         return jsonify({
             'success': True,
             'columns': list(df_joined.columns),
             'rows': len(df_joined),
-            'preview': df_joined.head(5).to_dict('records')
+            'preview': preview_df.to_dict('records')
         })
     
     except Exception as e:
