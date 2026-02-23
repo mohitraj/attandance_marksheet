@@ -62,8 +62,8 @@ def setX(excel_path, styled_path):
     wb = load_workbook(excel_path)
     ws = wb.active
 
-    # --- Insert two rows after header ---
-    ws.insert_rows(2, amount=2)
+    # --- Insert one row after header for Lecture row ---
+    ws.insert_rows(2, amount=1)
     total_cols = ws.max_column
 
     # Row 2: merged A2:B2 = "Lecture", counting from C
@@ -77,13 +77,16 @@ def setX(excel_path, styled_path):
         cell.font = Font(size=14)
         cell.alignment = Alignment(horizontal='center', vertical='center')
 
-    # Row 3: merged A3:B3 = "Period Number", clear C onwards
+    # Row 3: already exists (first data row), A3 and B3 have 'A' filled by pandas
+    # Clear A3, B3, merge them, write "Period Number"
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=2)
+    light_green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
     ws.cell(row=3, column=1).value = "Period Number"
     ws.cell(row=3, column=1).font = Font(size=14, bold=True)
     ws.cell(row=3, column=1).alignment = Alignment(horizontal='center', vertical='center')
+    ws.cell(row=3, column=1).fill = light_green_fill
     for col_idx in range(3, total_cols + 1):
-        ws.cell(row=3, column=col_idx).value = None
+        ws.cell(row=3, column=col_idx).fill = light_green_fill
 
     # --- Style lab columns with yellow fill ---
     header = [cell.value for cell in ws[1]]
@@ -95,7 +98,7 @@ def setX(excel_path, styled_path):
 
     # --- Style X cells: Red background, bold 14pt white font, center aligned ---
     red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-    for row in ws.iter_rows(min_row=4):  # data starts at row 4 now
+    for row in ws.iter_rows(min_row=4):  # data starts at row 4 (row 3 = Period Number)
         for cell in row[2:]:
             if cell.value == 'X':
                 cell.font = Font(bold=True, size=14, color="FFFFFF")
