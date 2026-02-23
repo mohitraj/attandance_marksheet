@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
 from openpyxl import load_workbook
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from collections import defaultdict
 
 app = Flask(__name__)
@@ -27,9 +27,9 @@ def landing():
 
 def clean_dataframe(df):
     """Replace NaN values with 'A' (Absent) or empty string"""
-    # Replace NaN with 'A' for attendance-related data
     df = df.fillna('A')
     return df
+
 # ==================== ATTENDANCE MERGER ====================
 def sort_key(date):
     if '.' in date:
@@ -61,16 +61,59 @@ def setnumber(df, output_path):
 def setX(excel_path, styled_path):
     wb = load_workbook(excel_path)
     ws = wb.active
+
+    # --- Insert two rows after header ---
+    ws.insert_rows(2, amount=2)
+    total_cols = ws.max_column
+
+    # Row 2: merged A2:B2 = "Lecture", counting from C
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=2)
+    ws.cell(row=2, column=1).value = "Lecture"
+    ws.cell(row=2, column=1).font = Font(size=14, bold=True)
+    ws.cell(row=2, column=1).alignment = Alignment(horizontal='center', vertical='center')
+    for col_idx in range(3, total_cols + 1):
+        cell = ws.cell(row=2, column=col_idx)
+        cell.value = col_idx - 2
+        cell.font = Font(size=14)
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Row 3: merged A3:B3 = "Period Number", clear C onwards
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=2)
+    ws.cell(row=3, column=1).value = "Period Number"
+    ws.cell(row=3, column=1).font = Font(size=14, bold=True)
+    ws.cell(row=3, column=1).alignment = Alignment(horizontal='center', vertical='center')
+    for col_idx in range(3, total_cols + 1):
+        ws.cell(row=3, column=col_idx).value = None
+
+    # --- Style lab columns with yellow fill ---
     header = [cell.value for cell in ws[1]]
     lab_columns = [i for i, col in enumerate(header) if isinstance(col, str) and col.endswith('_lab')]
     yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
     for col_idx in lab_columns:
         for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
             row[col_idx].fill = yellow_fill
-    for row in ws.iter_rows(min_row=2):
+
+    # --- Style X cells: Red background, bold 14pt white font, center aligned ---
+    red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    for row in ws.iter_rows(min_row=4):  # data starts at row 4 now
         for cell in row[2:]:
             if cell.value == 'X':
-                cell.font = Font(bold=True, size=14, color="FF0000")
+                cell.font = Font(bold=True, size=14, color="FFFFFF")
+                cell.fill = red_fill
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    # --- Border for entire sheet + center alignment for numbers ---
+    thin = Side(style='thin')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    center = Alignment(horizontal='center', vertical='center')
+
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            cell.border = border
+            # Center align numbers and the counting row
+            if isinstance(cell.value, (int, float)) or (cell.row == 2 and cell.column >= 3):
+                cell.alignment = center
+
     wb.save(styled_path)
 
 @app.route('/attendance')
@@ -98,15 +141,15 @@ def attendance_upload():
         styled_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
 
         key_columns = ["Roll. No", "Student Name"]
-        
+
         # Read Excel files
         df1 = pd.read_excel(lecture_path)
         df2 = pd.read_excel(lab_path)
-        
+
         # Clean NaN values - fill with 'A' for absent
         df1 = df1.fillna('A')
         df2 = df2.fillna('A')
-        
+
         df2_renamed = df2.rename(columns={col: col + '_lab' for col in df2.columns if col not in key_columns})
         merged_df = pd.merge(df1, df2_renamed, on=key_columns, how="inner")
         merged_df.columns = merged_df.columns.str.strip()
@@ -138,7 +181,6 @@ def attendance_upload():
 @app.route('/attendance/download/<filename>')
 def attendance_download(filename):
     return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
-
 # ==================== EXCEL JOINER ====================
 @app.route('/joiner')
 def joiner():
