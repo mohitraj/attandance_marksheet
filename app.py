@@ -18,6 +18,11 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['SAMPLE_FOLDER'], exist_ok=True)
 
+# Cell values that are NOT counted as a lecture. They stay as they are in the output.
+#   X = absent
+#   N = not counted (kept as "N")
+SKIP_MARKS = ('X', 'N')
+
 
 # ==================== LANDING PAGE ====================
 @app.route('/')
@@ -75,6 +80,9 @@ def preprocess_attendance_file(input_path, output_path):
         else:
             date = ws_src.cell(8, src_c).value
             period = ws_src.cell(9, src_c).value
+            # If Excel stored the date as a real date, convert it to 'dd-mm'
+            if isinstance(date, datetime):
+                date = date.strftime('%d-%m')
             ws_new.cell(1, dest_c).value = f"{date}_{period}"
 
     # --- DATA ROWS: source row 10 onwards -> destination row 2 onwards ---
@@ -122,19 +130,27 @@ def build_display_header(ws, id_col_count=2):
     for i, (date, period, is_lab) in enumerate(parsed):
         xl_col = i + 1
         if period is None:
-            # Identity col (Roll. No / Student Name): label in row 1, blank in row 2
             ws.cell(1, xl_col).value = date
             ws.cell(2, xl_col).value = None
         else:
-            # Every attendance col (lecture AND lab): date in row 1, period in row 2
             ws.cell(1, xl_col).value = date
-            ws.cell(2, xl_col).value = period
+            # Show period as a number when possible
+            try:
+                ws.cell(2, xl_col).value = int(float(period))
+            except ValueError:
+                ws.cell(2, xl_col).value = period
 
     return ws
 
 
 # ==================== ATTENDANCE MERGER ====================
 def sort_key(col_name):
+    """
+    Order of columns:
+      1. Date (month, then day)
+      2. Period slot number on that date (lecture and lab mixed by slot)
+      3. If lecture and lab have the SAME date and SAME slot, lecture comes first
+    """
     is_lab = col_name.endswith('_lab')
     base = col_name[:-4] if is_lab else col_name
     parts = base.split('_')
@@ -142,21 +158,19 @@ def sort_key(col_name):
     period_part = parts[1] if len(parts) > 1 else '0'
     try:
         day, month = map(int, date_part.split('-'))
-        period = int(period_part)
+        period = int(float(period_part))
     except Exception:
-        return (99, 99, 0, 99)
-    # month, day → same date grouped; is_lab=0 (lecture) before is_lab=1 (lab); then period
-    return (month, day, int(is_lab), period)
+        return (99, 99, 99, 0)
+    return (month, day, period, int(is_lab))
 
 
 def setnumber(df, output_path):
     """
-    Replace non-X attendance values with sequential lecture numbers per student row.
-    Works on the flat single-header DataFrame (before display header is built).
+    Replace attendance values with sequential lecture numbers per student row.
+    Cells with X or N are skipped (not counted) and kept as X / N.
     """
     data_cols = df.columns[2:]
 
-    # Cast to object so pandas accepts mixed int/str values in the same column
     df = df.copy()
     df[data_cols] = df[data_cols].astype(object)
 
@@ -164,11 +178,11 @@ def setnumber(df, output_path):
         counter = 1
         for col in data_cols:
             val = str(row[col]).strip().upper()
-            if val != 'X':
+            if val in SKIP_MARKS:
+                row[col] = val          # keep 'X' or 'N' as it is
+            else:
                 row[col] = counter
                 counter += 1
-            else:
-                row[col] = 'X'
         return row
 
     df[data_cols] = df[data_cols].apply(renumber_row, axis=1)
@@ -178,31 +192,20 @@ def setnumber(df, output_path):
 def apply_styles_with_display_header(excel_path, styled_path):
     """
     1. Load the flat-header xlsx produced by setnumber().
-    2. Build the two-row display header (date merged / period below).
-    3. Apply all visual styles: Lecture row, Period row, X cells, borders, lab columns.
+    2. Build the two-row display header (date / period below).
+    3. Apply all visual styles: Lecture row, Period row, X and N cells, borders, lab columns.
     """
     wb = load_workbook(excel_path)
     ws = wb.active
 
     # --- Step 1: Build two-row display header (inserts row 2) ---
     build_display_header(ws, id_col_count=2)
-
-    # Now the sheet has:
-    #   Row 1 : merged date groups  (e.g.  22-01  |  29-01  | ...)
-    #   Row 2 : period numbers      (e.g.    3  4  |   3  4  | ...)
-    #   Row 3+: student data
-
     total_cols = ws.max_column
 
     # --- Step 2: Insert Lecture row ABOVE the current row 1 ---
     ws.insert_rows(1)
-    # Rows are now:
-    #   Row 1 : (blank, to become Lecture row)
-    #   Row 2 : merged dates
-    #   Row 3 : period numbers
-    #   Row 4+: student data
+    # Rows now: 1 Lecture | 2 dates | 3 period numbers | 4+ student data
 
-    # Fill Lecture row
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
     ws.cell(row=1, column=1).value = "Lecture"
     ws.cell(row=1, column=1).font = Font(size=14, bold=True)
@@ -219,14 +222,12 @@ def apply_styles_with_display_header(excel_path, styled_path):
     # --- Step 3: Style the date row (row 2) and period row (row 3) ---
     light_green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
 
-    # Date row (row 2) — already has merged cells from build_display_header
     for col_idx in range(1, total_cols + 1):
         cell = ws.cell(row=2, column=col_idx)
         cell.fill = light_green_fill
         cell.font = Font(size=14, bold=True)
         cell.alignment = Alignment(horizontal='center', vertical='center')
 
-    # Period Number row (row 3)
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=2)
     ws.cell(row=3, column=1).value = "Period Number"
     ws.cell(row=3, column=1).font = Font(size=14, bold=True)
@@ -239,12 +240,6 @@ def apply_styles_with_display_header(excel_path, styled_path):
         cell.alignment = Alignment(horizontal='center', vertical='center')
 
     # --- Step 4: Style lab columns with yellow fill ---
-    # Lab columns are identified from the original flat header which is now in row 2
-    # But since we merged/rewrote row 2, detect lab cols from col index pattern.
-    # We track via column letter: lab cols have '_lab' in the original flat headers.
-    # Re-read original to identify them — they're stored as period=number in row 3.
-    # Actually the simplest: check if the column was a lab column by examining the
-    # flat-header file. We do this by re-reading the pre-styled file.
     wb_flat = load_workbook(excel_path)
     ws_flat = wb_flat.active
     flat_header = [ws_flat.cell(1, c).value for c in range(1, ws_flat.max_column + 1)]
@@ -256,13 +251,18 @@ def apply_styles_with_display_header(excel_path, styled_path):
         for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
             row[col_idx - 1].fill = yellow_fill
 
-    # --- Step 5: Style X cells (red background, bold white) ---
+    # --- Step 5: Style X cells (red) and N cells (orange) ---
     red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    orange_fill = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")
     for row in ws.iter_rows(min_row=4):
         for cell in row[2:]:
             if cell.value == 'X':
                 cell.font = Font(bold=True, size=14, color="FFFFFF")
                 cell.fill = red_fill
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+            elif cell.value == 'N':
+                cell.font = Font(bold=True, size=14, color="000000")
+                cell.fill = orange_fill
                 cell.alignment = Alignment(horizontal='center', vertical='center')
 
     # --- Step 6: Borders and alignment for all cells ---
@@ -271,7 +271,7 @@ def apply_styles_with_display_header(excel_path, styled_path):
     center = Alignment(horizontal='center', vertical='center')
 
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row,
-                             min_col=1, max_col=ws.max_column):
+                            min_col=1, max_col=ws.max_column):
         for cell in row:
             cell.border = border
             if isinstance(cell.value, (int, float)):
@@ -289,9 +289,9 @@ def attendance():
 @app.route('/attendance/upload', methods=['POST'])
 def attendance_upload():
     try:
-        lecture_file = request.files['lecture']
-        lab_file = request.files['lab']
-        if not lecture_file or not lab_file:
+        lecture_file = request.files.get('lecture')
+        lab_file = request.files.get('lab')
+        if not lecture_file or not lab_file or not lecture_file.filename or not lab_file.filename:
             flash("Both files are required.", "error")
             return redirect(url_for("attendance"))
 
@@ -316,18 +316,15 @@ def attendance_upload():
         df1 = pd.read_excel(lecture_path, header=0)
         df2 = pd.read_excel(lab_path, header=0)
 
-        # Cast key columns to string to prevent float/int mismatch causing cross-join
         for col in key_columns:
             if col in df1.columns:
                 df1[col] = df1[col].astype(str).str.strip()
             if col in df2.columns:
                 df2[col] = df2[col].astype(str).str.strip()
 
-        # Drop rows where Roll. No is empty/nan (metadata artifact rows)
         df1 = df1[~df1["Roll. No"].isin(["", "nan", "None"])]
         df2 = df2[~df2["Roll. No"].isin(["", "nan", "None"])]
 
-        # fillna only on attendance cols, not key cols (avoids corrupting Roll. No / Name)
         att_cols1 = [c for c in df1.columns if c not in key_columns]
         att_cols2 = [c for c in df2.columns if c not in key_columns]
         df1[att_cols1] = df1[att_cols1].fillna("A")
@@ -341,13 +338,11 @@ def attendance_upload():
         merged_df.columns = merged_df.columns.str.strip()
         date_cols = [col for col in merged_df.columns if col not in key_columns]
 
+        # Sort by date first, then by period slot number
         sort_cols = sorted(date_cols, key=sort_key)
         final_df = merged_df.loc[:, key_columns + sort_cols]
 
-        # setnumber writes flat single-header xlsx (unchanged from before)
         setnumber(final_df, final_path)
-
-        # NEW: apply_styles_with_display_header builds two-row header + all styling
         apply_styles_with_display_header(final_path, styled_path)
 
         session["download_file"] = file_name
