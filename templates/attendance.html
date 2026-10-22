@@ -2,220 +2,369 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Attendance Merger Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Merger Tool | Prime Learn Point</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #5b5bd6;
+      --primary-dark: #4338ca;
+      --accent: #f59e0b;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --success-bg: #ecfdf5;
+      --success-text: #065f46;
+      --error-bg: #fef2f2;
+      --error-text: #991b1b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 600px;
-      width: 100%;
-    }
-    .card {
-      border-radius: 1rem;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      background: white;
-      padding: 30px;
-    }
-    h3 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
-    .btn-sample {
-      font-size: 0.9rem;
-      padding: 8px 16px;
-      margin: 5px;
-      border: 1px solid #6c757d;
-      background: white;
-      color: #6c757d;
-      border-radius: 5px;
-      text-decoration: none;
-      display: inline-block;
-      transition: all 0.3s;
-    }
-    .btn-sample:hover {
-      background: #6c757d;
-      color: white;
-    }
-    .text-center {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .alert {
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 5px;
-      position: relative;
-    }
-    .alert-success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .alert-danger {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    .btn-close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: inherit;
-    }
-    .form-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-      color: #555;
-    }
-    .form-control {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-    .btn-primary {
-      width: 100%;
-      padding: 12px;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 25px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s;
+      min-height: 100vh;
+      color: var(--text);
+      padding: 24px 16px;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-    .btn-success {
-      background: #28a745;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      text-decoration: none;
-      display: inline-block;
-      transition: all 0.3s;
-    }
-    .btn-success:hover {
-      background: #218838;
-    }
-    #loader {
-      display: none;
-      text-align: center;
-      margin-top: 20px;
-    }
-    .spinner-border {
-      width: 3rem;
-      height: 3rem;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .fade-out {
-      opacity: 0.3;
-      pointer-events: none;
-    }
-    .text-muted {
-      color: #6c757d;
-      font-size: 0.9rem;
-      margin-top: 20px;
+
+    .wrap { max-width: 720px; margin: 0 auto; }
+
+    /* ---------- Top bar ---------- */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
     .back-link {
-      display: inline-block;
-      margin-bottom: 20px;
-      color: #667eea;
+      color: #fff;
       text-decoration: none;
-      font-weight: bold;
+      font-weight: 500;
+      opacity: 0.9;
     }
-    .back-link:hover {
-      text-decoration: underline;
+    .back-link:hover { opacity: 1; text-decoration: underline; }
+    .site-pill {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255,255,255,0.35);
+    }
+    .site-pill:hover { background: rgba(255,255,255,0.3); }
+
+    /* ---------- Card ---------- */
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .card-head {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      padding: 28px 30px;
+      text-align: center;
+    }
+    .card-head .icon { font-size: 2.6rem; }
+    .card-head h1 { font-size: 1.7rem; font-weight: 700; margin-top: 6px; }
+    .card-head p { opacity: 0.9; margin-top: 4px; font-size: 0.95rem; }
+
+    .card-body { padding: 28px 30px; }
+
+    /* ---------- Alerts ---------- */
+    .alert {
+      padding: 14px 44px 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      position: relative;
+      font-size: 0.95rem;
+    }
+    .alert-success { background: var(--success-bg); color: var(--success-text); border: 1px solid #a7f3d0; }
+    .alert-danger  { background: var(--error-bg);   color: var(--error-text);   border: 1px solid #fecaca; }
+    .btn-close {
+      position: absolute; top: 8px; right: 12px;
+      background: none; border: none; font-size: 22px;
+      cursor: pointer; color: inherit;
+    }
+
+    .download-box {
+      text-align: center;
+      background: var(--success-bg);
+      border: 2px dashed #34d399;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 22px;
+    }
+    .download-box p { color: var(--success-text); font-weight: 600; margin-bottom: 12px; }
+    .btn-download {
+      display: inline-block;
+      background: #10b981;
+      color: #fff;
+      padding: 12px 26px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn-download:hover { background: #059669; transform: translateY(-2px); }
+
+    /* ---------- Upload zones ---------- */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .drop {
+      position: relative;
+      border: 2px dashed #c7d2fe;
+      background: #f5f7ff;
+      border-radius: 14px;
+      padding: 22px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .drop:hover, .drop.dragover { border-color: var(--primary); background: #eef0ff; }
+    .drop.has-file { border-color: #10b981; background: #f0fdf4; border-style: solid; }
+    .drop input {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%;
+    }
+    .drop .d-icon { font-size: 2rem; }
+    .drop .d-title { font-weight: 600; margin-top: 6px; }
+    .drop .d-hint { color: var(--muted); font-size: 0.82rem; margin-top: 4px; word-break: break-all; }
+    .drop.has-file .d-hint { color: #047857; font-weight: 500; }
+
+    /* ---------- Button ---------- */
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(102,126,234,0.45); }
+
+    /* ---------- Loader ---------- */
+    #loader { display: none; text-align: center; margin-top: 18px; color: var(--muted); }
+    .spinner {
+      width: 42px; height: 42px; margin: 0 auto 8px;
+      border: 4px solid #e5e7eb; border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-out { opacity: 0.35; pointer-events: none; }
+
+    /* ---------- Legend ---------- */
+    .legend {
+      margin-top: 26px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .legend h4 { font-size: 0.95rem; margin-bottom: 12px; }
+    .legend-items { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip {
+      display: flex; align-items: center; gap: 8px;
+      background: #f9fafb; border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 999px; font-size: 0.82rem;
+    }
+    .sw {
+      width: 22px; height: 22px; border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.75rem;
+    }
+    .sw-x   { background: #ff0000; color: #fff; }
+    .sw-n   { background: #ffa500; color: #000; }
+    .sw-lab { background: #ffff00; border: 1px solid #e5e7eb; }
+    .sw-hd  { background: #90ee90; }
+
+    .steps {
+      margin-top: 18px;
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.8;
+      padding-left: 18px;
+    }
+
+    /* ---------- Prime Learn Point banner ---------- */
+    .plp-banner {
+      margin-top: 22px;
+      background: linear-gradient(135deg, #fff7ed, #fef3c7);
+      border: 1px solid #fde68a;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .plp-banner .plp-icon { font-size: 2.4rem; }
+    .plp-banner .plp-text { flex: 1; }
+    .plp-banner h3 { font-size: 1.05rem; color: #92400e; }
+    .plp-banner p  { font-size: 0.86rem; color: #78350f; margin-top: 2px; }
+    .btn-visit {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+    .btn-visit:hover { background: #d97706; transform: translateY(-2px); }
+
+    .footer {
+      text-align: center;
+      color: #fff;
+      margin-top: 22px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    .footer a { color: #fff; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .upload-grid { grid-template-columns: 1fr; }
+      .card-body, .card-head { padding: 22px 18px; }
+      .plp-banner { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="card">
+<div class="wrap">
+
+  <div class="topbar">
     <a href="/" class="back-link">← Back to Home</a>
-    <h3>📊 Attendance Merger Tool</h3>
-    
-    <!-- Sample File Download -->
-    <div class="text-center">
-   
-      
-        🧪 No need to do any header settings
-   
+    <a href="https://primelearnpoint.com" target="_blank" rel="noopener" class="site-pill">🌐 primelearnpoint.com</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="icon">📊</div>
+      <h1>Attendance Merger Tool</h1>
+      <p>Merge lecture and lab attendance into one sorted sheet</p>
     </div>
-    
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
-            {{ message }}
-            <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
-          </div>
-        {% endfor %}
+
+    <div class="card-body">
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+              {{ message }}
+              <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Download Link -->
+      {% if download_file %}
+        <div class="download-box">
+          <p>✅ Your file is ready!</p>
+          <a class="btn-download" href="{{ url_for('attendance_download', filename=download_file) }}">⬇️ Download Final File</a>
+        </div>
       {% endif %}
-    {% endwith %}
-    
-    <!-- Download Link -->
-    {% if download_file %}
-      <div class="alert alert-success text-center">
-        ✅ File is ready. Thanks to Mohit<br>
-        <a class="btn-success" style="margin-top: 10px;" href="{{ url_for('attendance_download', filename=download_file) }}">⬇️ Download Final File</a>
+
+      <!-- Upload Form -->
+      <form method="POST" action="/attendance/upload" enctype="multipart/form-data" id="upload-form">
+        <div class="upload-grid">
+          <label class="drop" id="drop-lecture">
+            <input type="file" name="lecture" accept=".xlsx" required>
+            <div class="d-icon">📘</div>
+            <div class="d-title">Lecture File</div>
+            <div class="d-hint">Click or drop .xlsx here</div>
+          </label>
+          <label class="drop" id="drop-lab">
+            <input type="file" name="lab" accept=".xlsx" required>
+            <div class="d-icon">🧪</div>
+            <div class="d-title">Lab File</div>
+            <div class="d-hint">Click or drop .xlsx here</div>
+          </label>
+        </div>
+        <button type="submit" class="btn-primary">🚀 Upload &amp; Process</button>
+      </form>
+
+      <!-- Loader -->
+      <div id="loader">
+        <div class="spinner"></div>
+        Processing... please wait
       </div>
-    {% endif %}
-    
-    <!-- Upload Form -->
-    <form method="POST" action="/attendance/upload" enctype="multipart/form-data" id="upload-form">
-      <div>
-        <label class="form-label">📘 Upload Lecture File (.xlsx)</label>
-        <input class="form-control" type="file" name="lecture" accept=".xlsx" required>
+
+      <!-- Legend -->
+      <div class="legend">
+        <h4>🎨 Colours in the output file</h4>
+        <div class="legend-items">
+          <span class="chip"><span class="sw sw-x">X</span> Absent</span>
+          <span class="chip"><span class="sw sw-n">N</span> Not counted</span>
+          <span class="chip"><span class="sw sw-lab"></span> Lab column</span>
+          <span class="chip"><span class="sw sw-hd"></span> Date / Period row</span>
+        </div>
+        <ul class="steps">
+          <li>Upload the raw files as they are. No header changes needed.</li>
+          <li>Columns are sorted by date, then by period slot number.</li>
+          <li>X and N cells are skipped in the lecture count.</li>
+        </ul>
       </div>
-      <div>
-        <label class="form-label">🧪 Upload Lab File (.xlsx)</label>
-        <input class="form-control" type="file" name="lab" accept=".xlsx" required>
+
+      <!-- Prime Learn Point banner -->
+      <div class="plp-banner">
+        <div class="plp-icon">🎓</div>
+        <div class="plp-text">
+          <h3>Learn more at Prime Learn Point</h3>
+          <p>Free tutorials on Python, web development, DSA, ML and more.</p>
+        </div>
+        <a href="https://primelearnpoint.com" target="_blank" rel="noopener" class="btn-visit">Visit Now →</a>
       </div>
-      <button type="submit" class="btn-primary">🚀 Upload & Process</button>
-    </form>
-    
-    <!-- Loader -->
-    <div id="loader">
-      <div class="spinner-border"></div>
-      <p style="margin-top: 10px; color: #666;">Processing... Please wait</p>
+
     </div>
-    
-    <p class="text-muted text-center">
-      Created by Mohit
-    </p>
+  </div>
+
+  <div class="footer">
+    Created with ❤️ by Mohit · <a href="https://primelearnpoint.com" target="_blank" rel="noopener">primelearnpoint.com</a>
   </div>
 </div>
 
 <script>
+  // Show chosen file name and support drag and drop
+  document.querySelectorAll('.drop').forEach(function (box) {
+    const input = box.querySelector('input');
+    const hint = box.querySelector('.d-hint');
+
+    input.addEventListener('change', function () {
+      if (input.files.length) {
+        hint.textContent = '✔ ' + input.files[0].name;
+        box.classList.add('has-file');
+      } else {
+        hint.textContent = 'Click or drop .xlsx here';
+        box.classList.remove('has-file');
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      box.addEventListener(ev, function () { box.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      box.addEventListener(ev, function () { box.classList.remove('dragover'); });
+    });
+  });
+
   const form = document.getElementById("upload-form");
   const loader = document.getElementById("loader");
   form.addEventListener("submit", function () {
